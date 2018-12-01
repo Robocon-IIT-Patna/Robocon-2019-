@@ -45,7 +45,7 @@ void loop() {
 
   Serial.println(lsaF+String("\t")+lsaB+String("\t")+lsaR+String("\t")+lsaL);
 
-  follow_line();
+  //follow_line();
 }
 /*
 void loop() {
