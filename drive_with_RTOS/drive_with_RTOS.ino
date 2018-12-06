@@ -9,12 +9,13 @@ int vlsaF,vlsaB,vlsaR,vlsaL;
 
 // PS2
 //int joy1x,joy1y,joy2x,joy2y;
-int jxpwm=0,jypwm=0;
+int jxpwm=0,jypwm=0,rot=0;
 int triangle=0,cross=0; // put other buttons here
 
 // Autopilot
 int autopilot=0;
 int dir=0;
+int pwm_set=0;
 TaskHandle_t automatic_process = NULL;
 TaskHandle_t manual_process = NULL;
 
@@ -28,9 +29,9 @@ int dfpwm,dbpwm,drpwm,dlpwm;
 /* --- End of State Variables --- */
 
 /* -- Constants --- */
-const int HIGH_PWM = 80;
-const int LOW_PWM = 80
-;
+const int HIGH_PWM = 80; //TODO: double
+const int LOW_PWM = 30;
+const int ROT_PWM = 25;
 
 /* --- Pins --- */
 const int fwdir = 4;
@@ -97,10 +98,11 @@ void master(void *params) {
 
     // PS2
     /* TODO: Uuncomment PS2
-    jxpwm = (ps2.readButton(PS2_JOYSTICK_LEFT_X_AXIS)-128)*2;
-    jypwm = (ps2.readButton(PS2_JOYSTICK_RIGHT_Y_AXIS)-128)*2;
+    jxpwm = (ps2.readButton(PS2_JOYSTICK_RIGHT_X_AXIS)-128)*2;
+    jypwm = -(ps2.readButton(PS2_JOYSTICK_LEFT_Y_AXIS)-128)*2;
     jxpwm = constrain(jxpwm,-255,255);
     jypwm = constrain(jypwm,-255,255);
+    rot = ps2.readButton(PS2_JOYSTICK_LEFT)-ps2.readButton(PS2_JOYSTICK_RIGHT);
     triangle = 1-ps2.readButton(PS2_TRIANGLE);
     cross = 1-ps2.readButton(PS2_CROSS);
     
@@ -120,11 +122,10 @@ void master(void *params) {
 // Debug master
 void master(void *params) {
   // TODO: CONTINUE HERE
-  dir=1;
-  if (manual_process != NULL)
-    vTaskSuspend(manual_process);
-  autopilot = 1;
-  vTaskResume(automatic_process);
+
+  Cytron_PS2Shield ps2(0,1);
+  ps2.begin(9600);
+  disable_autopilot();
   
   for(;;) {
     vlsaF = (int)((float)analogRead(analogPinF)/921*70); //forward
@@ -136,7 +137,28 @@ void master(void *params) {
     lsaB = ((vlsaB>=0) && (vlsaB<70))?1:0;
     lsaR = ((vlsaR>=0) && (vlsaR<70))?1:0;
     lsaL = ((vlsaL>=0) && (vlsaL<70))?1:0;
-        
+
+    
+    jxpwm = (ps2.readButton(PS2_JOYSTICK_RIGHT_X_AXIS)-128);
+    jypwm = -(ps2.readButton(PS2_JOYSTICK_LEFT_Y_AXIS)-128);
+    jxpwm = constrain(jxpwm,-255,255);
+    jypwm = constrain(jypwm,-255,255);
+
+    rot = ps2.readButton(PS2_JOYSTICK_LEFT)-ps2.readButton(PS2_JOYSTICK_RIGHT);
+
+    triangle = 1-ps2.readButton(PS2_TRIANGLE);
+    cross = 1-ps2.readButton(PS2_CROSS);
+
+    if (triangle && cross)
+      triangle = 0;
+
+    // Decisions
+    if (triangle)
+      enable_autopilot();
+
+    if (cross)
+      disable_autopilot();
+
     vTaskDelay(1);
   }
 }
@@ -174,8 +196,19 @@ void manual(void *params) {
     if (autopilot == 1) // autopilot is enabled
       continue; // TODO: enable autopilot and destroy task
 
-    fpwm = jxpwm; bpwm = jxpwm;
-    rpwm = jypwm; lpwm = jypwm;
+    if (rot == 0) {
+      fpwm = jxpwm; bpwm = jxpwm;
+      rpwm = jypwm; lpwm = jypwm;
+    } else {
+      if (rot == 1) {
+        fpwm = -LOW_PWM; bpwm = LOW_PWM;
+        rpwm = -LOW_PWM; lpwm = LOW_PWM;
+      } else if (rot == -1) {
+        fpwm = LOW_PWM; bpwm = -LOW_PWM;
+        rpwm = LOW_PWM; lpwm = -LOW_PWM;
+      }
+    }if (dir == 0) // bot should be stopped
+        continue;
   }
 }
 
@@ -188,43 +221,48 @@ void automatic(void *params) {
         
       if (lsaF+lsaB+lsaR+lsaL == 0) { // no line detected. so stop.
         //dir = 0; // TODO: disable autopilot and destroy task
+        pwm_set = 0;
+        disable_autopilot();
         continue;
       }
 
       if (dir < 0 || dir > 4) { // invalid dir
         dir = 0; // TODO: disable autopilot and destroy task
+        disable_autopilot();
         continue;
       }
 
       // set pwms
+      
       if (dir == 1) {
-        rpwm = HIGH_PWM; lpwm = HIGH_PWM;
+        rpwm = pwm_set; lpwm = pwm_set;
       } else if (dir == 2) {
-        fpwm = HIGH_PWM; bpwm = HIGH_PWM;
+        fpwm = pwm_set; bpwm = pwm_set;
       } else if (dir == 3) {
-        rpwm = -HIGH_PWM; lpwm = -HIGH_PWM;
+        rpwm = -pwm_set; lpwm = -pwm_set;
       } else if (dir == 4) {
-        fpwm = -HIGH_PWM; bpwm = -HIGH_PWM;
+        fpwm = -pwm_set; bpwm = -pwm_set;
       }
+      //rpwm = 0; fpwm = 0; lpwm = 0; bpwm = 0;
 
       // align with line
       if (dir==1 || dir==3) {
-        if (lsaF) {
-          if (vlsaF <= 18)
-            fpwm = -LOW_PWM;
-          else if (vlsaF >= 53)
+        if (lsaB) {
+          if (vlsaB <= 18)
             fpwm = LOW_PWM;
+          else if (vlsaB >= 53)
+            fpwm = -LOW_PWM;
           else
             fpwm = 0;
         } else {
             fpwm = 0;
         }
 
-        if (lsaB) {
-          if (vlsaB <= 18)
-            bpwm = LOW_PWM;
-          else if (vlsaB >= 53)
+        if (lsaF) {
+          if (vlsaF <= 18)
             bpwm = -LOW_PWM;
+          else if (vlsaF >= 53)
+            bpwm = LOW_PWM;
           else
             bpwm = 0;
         } else {
@@ -256,13 +294,41 @@ void automatic(void *params) {
         }
       }
 
+      if ((lsaF+lsaB+lsaR+lsaL == 0) || (dir == 0)) {
+        dir = 0; pwm_set = 0;
+        disable_autopilot();
+        continue;
+      }
+
+      if (lsaF+lsaB+lsaR+lsaL == 1) {
+          /*
+          if (dir == 1 && lsaB) {
+            pwm_set = 25;
+          } else if (dir == 1 && lsaF) {
+            pwm_set = LOW_PWM;
+          } else if (dir == 2 && lsaR) {
+            pwm_set = LOW_PWM;
+          } else if (dir == 2 && lsaL) {
+            pwm_set = 25;
+          } else if (dir == 3 && lsaF) {
+            pwm_set = 25;
+          } else if (dir == 3 && lsaB) {
+            pwm_set = LOW_PWM;
+          } else if (dir == 4 && lsaR) {
+            pwm_set = 25;
+          } else if (dir == 4 && lsaL) {
+            pwm_set = LOW_PWM;
+          }*/
+          pwm_set = LOW_PWM;
+          continue;
+      }
+      
       // decide direction
-      if (lsaF+lsaB+lsaR+lsaL != 2) // multiple or ambiguous paths. continue.
+      if (lsaF+lsaB+lsaR+lsaL > 2) // multiple or ambiguous paths. continue.
         continue;
 
-      if (dir == 0) // bot should be stopped
-        continue;
-
+      pwm_set = HIGH_PWM;
+      
       if (lsaF && lsaR) {
         if (dir == 1);
         else if (dir == 2);
