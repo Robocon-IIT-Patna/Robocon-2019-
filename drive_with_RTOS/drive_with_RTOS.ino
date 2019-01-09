@@ -10,7 +10,8 @@ int vlsaF,vlsaB,vlsaR,vlsaL;
 // PS2
 //int joy1x,joy1y,joy2x,joy2y;
 int jxpwm=0,jypwm=0,rot=0;
-int triangle=0,cross=0; // put other buttons here
+int triangle=0,cross=0,circle=0,sqr=0,right_1=0,right_2=0; // put other buttons here
+int rotatearm = 0;
 
 // Autopilot
 int autopilot=0;
@@ -29,7 +30,7 @@ int dfpwm,dbpwm,drpwm,dlpwm;
 /* --- End of State Variables --- */
 
 /* -- Constants --- */
-const int HIGH_PWM = 80; //TODO: double
+const int HIGH_PWM = 80;
 const int LOW_PWM = 30;
 const int ROT_PWM = 25;
 
@@ -47,6 +48,12 @@ const int analogPinF = A7;
 const int analogPinB = A2;
 const int analogPinL = A0;
 const int analogPinR = A4;
+
+const int thro = 29;
+const int open = 31;
+
+const int armdir = 37;
+const int armpwm = 39;
 /* -- End of pins --- */
 
 /* --- Processes --- */
@@ -126,6 +133,8 @@ void master(void *params) {
   Cytron_PS2Shield ps2(0,1);
   ps2.begin(9600);
   disable_autopilot();
+  digitalWrite(thro,LOW);
+  digitalWrite(open,LOW);
   
   for(;;) {
     vlsaF = (int)((float)analogRead(analogPinF)/921*70); //forward
@@ -148,6 +157,10 @@ void master(void *params) {
 
     triangle = 1-ps2.readButton(PS2_TRIANGLE);
     cross = 1-ps2.readButton(PS2_CROSS);
+    circle = 1-ps2.readButton(PS2_CIRCLE);
+    sqr = 1-ps2.readButton(PS2_SQUARE);
+    right_1 = 1-ps2.readButton(PS2_RIGHT_1);
+    right_2 = 1-ps2.readButton(PS2_RIGHT_2);
 
     if (triangle && cross)
       triangle = 0;
@@ -159,6 +172,16 @@ void master(void *params) {
     if (cross)
       disable_autopilot();
 
+    if (right_1 && right_2)
+      rotatearm = 0;
+    else if (right_1)
+      rotatearm = 1;
+    else if (right_2)
+      rotatearm = -1;
+    else
+      rotatearm = 0;
+
+    
     vTaskDelay(1);
   }
 }
@@ -207,8 +230,7 @@ void manual(void *params) {
         fpwm = LOW_PWM; bpwm = -LOW_PWM;
         rpwm = LOW_PWM; lpwm = -LOW_PWM;
       }
-    }if (dir == 0) // bot should be stopped
-        continue;
+    }
   }
 }
 
@@ -369,6 +391,12 @@ void actuate(void *params) {
   pinMode(fwpwm,OUTPUT);
   pinMode(fwpwm,OUTPUT);
   pinMode(fwpwm,OUTPUT);
+
+  pinMode(thro,OUTPUT);
+  pinMode(open,OUTPUT);
+
+  pinMode(armdir,OUTPUT);
+  pinMode(armpwm,OUTPUT);
   
   for(;;) {
      vTaskDelay(1);
@@ -397,6 +425,27 @@ void actuate(void *params) {
      analogWrite(bwpwm,ubpwm);
      analogWrite(rwpwm,urpwm);
      analogWrite(lwpwm,ulpwm);
+
+     if (circle)
+      digitalWrite(thro,HIGH);
+    else
+      digitalWrite(thro,LOW);
+
+    if (sqr)
+      digitalWrite(open,HIGH);
+    else
+      digitalWrite(open,LOW);
+
+    if (rotatearm == 1) {
+      digitalWrite(armdir,LOW);
+      digitalWrite(armpwm,HIGH);
+    } else if (rotatearm == 0) {
+      digitalWrite(armdir,LOW);
+      digitalWrite(armpwm,LOW);
+    } else if (rotatearm == -1) {
+      digitalWrite(armdir,HIGH);
+      digitalWrite(armpwm,HIGH);
+    }
   }
 }
 
