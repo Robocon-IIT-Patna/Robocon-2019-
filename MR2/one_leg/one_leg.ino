@@ -16,18 +16,19 @@ Servo knee;
 float theta1=0,theta2=0;
 float l1=31,l2=32;
 
-float h = 58;
+float h = 60;
 
 void setup() {
   thigh.attach(8);  // attaches the servo on pin 9 to the servo object
   knee.attach(11);
   thigh.write(70);
-  knee.write(180);
-  delay(2000);
+  knee.write(90);
+  delay(5000);
 
+  return;
   ik(8,h);
-  thigh.write(70+(int)theta1);
-  knee.write(180-(int)theta2);
+  thigh.write(90+(int)theta1);
+  knee.write(90-(int)theta2);
   delay(2000);
 
   //Serial.begin(9600);
@@ -44,13 +45,14 @@ void ik(float x, float y) {
 
 // 60 -> 0.02, 70 -> 0.02, 80 -> 0.02, 90 -> 0.4
 void loop() {
+  return;
   
   for(float t=0; t<=1; t+=0.05) {
     float x = 8-16*t;
     ik(x,h);
 
-    thigh.write(70+(int)theta1);
-    knee.write(180-(int)theta2);
+    thigh.write(90+(int)theta1);
+    knee.write(90-(int)theta2);
     delay(50);
   }
 
@@ -59,8 +61,8 @@ void loop() {
     float y = h-8*sin(t*PI);
     ik(x,y);
 
-    thigh.write(70+(int)theta1);
-    knee.write(180-(int)theta2);
+    thigh.write(90+(int)theta1);
+    knee.write(90-(int)theta2);
     delay(50);
   }
 }

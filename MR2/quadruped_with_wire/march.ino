@@ -1,5 +1,5 @@
 
-const int path_res = 40;
+const int path_res = 20;
 const int path_res2 = path_res/2;
 const int path_res4 = path_res/4;
 
@@ -8,8 +8,8 @@ const int path_delay = 2000/path_res;
 float path_x[path_res];
 float path_y[path_res];
 
-const float raise_height = 5;
-const float step_radius = 5;
+const float raise_height = 10;
+const float step_radius = 8;
 
 int path_progress[4] = {0,0,0,0};
 

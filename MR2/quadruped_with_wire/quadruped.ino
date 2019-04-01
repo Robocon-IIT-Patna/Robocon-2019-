@@ -3,20 +3,15 @@ void setup() {
   Serial.begin(9600);
   
   init_servos();
-  
   rest_pos();
-  #if 1
-  delay(2000);
+  delay(5000);
   
-  start_march();
-  int start_time = millis();
-  while(millis()-start_time<5000) {
-    march();  
-  }
-  stop_march();
-  delay(3000);
-  straight_pos();
-  #endif
+  //start_march();
+  //int start_time = millis();
+  //while(millis()-start_time<10000) {
+  //  march();  
+  //}
+  //stop_march();
 }
 
 void loop() {
