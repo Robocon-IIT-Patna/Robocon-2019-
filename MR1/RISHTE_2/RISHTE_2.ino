@@ -10,8 +10,9 @@ int vlsaF,vlsaB,vlsaR,vlsaL;
 // PS2
 //int joy1x,joy1y,joy2x,joy2y;
 int jxpwm=0,jypwm=0,rot=0;
-int triangle=0,cross=0,circle=0,sqr=0,right_1=0,right_2=0; // put other buttons here
+int triangle=0,cross=0,circle=0,sqr=0,right_1=0,right_2=0, up = 0; // put other buttons here
 int rotatearm = 0;
+int high_speed = false;
 
 // Autopilot
 int autopilot=0;
@@ -34,6 +35,9 @@ const int HIGH_PWM = 80;
 const int LOW_PWM = 30;
 const int ROT_PWM = 25;
 
+const int MAN_LOW_PWM = 50;
+const int MAN_HIGH_PWM = 125;
+
 /* --- Pins --- */
 const int fwdir = 4;
 const int fwpwm = 5;
@@ -50,7 +54,14 @@ const int analogPinL = A0;
 const int analogPinR = A4;
 
 const int thro = 29;
+int prev_thro = 0;
 const int open = 31;
+int prev_open = 0;
+const int grip = 27;
+int prev_grip = 0;
+int thro_toggle = 0;//0 = closed  , 1 = open
+int open_toggle = 0;
+int grip_toggle = 0;
 
 const int armdir = 37;
 const int armpwm = 39;
@@ -130,6 +141,7 @@ void master(void *params) {
   disable_autopilot();
   digitalWrite(thro,LOW);
   digitalWrite(open,LOW);
+  digitalWrite(grip,LOW);
   
   for(;;) {
     vlsaF = (int)((float)analogRead(analogPinF)/921*70); //forward
@@ -145,10 +157,19 @@ void master(void *params) {
     
     jxpwm = (ps2.readButton(PS2_JOYSTICK_RIGHT_X_AXIS)-128);
     jypwm = -(ps2.readButton(PS2_JOYSTICK_LEFT_Y_AXIS)-128);
-    jxpwm = jxpwm*2;
-    jypwm = jypwm*2;
-    //jxpwm = map(jxpwm,-128,128,256,256);
-   // jypwm = map(jypwm,-128,128,256,256);
+
+    if (!autopilot) {
+      if (high_speed) {
+        jxpwm = map(jxpwm,-128,128,-MAN_HIGH_PWM,MAN_HIGH_PWM);
+        jypwm = map(jypwm,-128,128,-MAN_HIGH_PWM,MAN_HIGH_PWM);
+      } else {
+        jxpwm = map(jxpwm,-128,128,-MAN_LOW_PWM,MAN_LOW_PWM);
+        jypwm = map(jypwm,-128,128,-MAN_LOW_PWM,MAN_LOW_PWM);
+      }
+    } else {
+      jypwm = map(jypwm,-128,128,-HIGH_PWM,HIGH_PWM);
+    }
+    
     jxpwm = constrain(jxpwm,-255,255);
     jypwm = constrain(jypwm,-255,255);
 
@@ -160,6 +181,12 @@ void master(void *params) {
     sqr = 1-ps2.readButton(PS2_SQUARE);
     right_1 = 1-ps2.readButton(PS2_RIGHT_1);
     right_2 = 1-ps2.readButton(PS2_RIGHT_2);
+    up = 1-ps2.readButton(PS2_UP);
+
+    if (1-ps2.readButton(PS2_LEFT_2))
+      high_speed = false;
+    else if (1-ps2.readButton(PS2_LEFT_1))
+      high_speed = true;
 
     if (triangle && cross)
       triangle = 0;
@@ -393,6 +420,7 @@ void actuate(void *params) {
 
   pinMode(thro,OUTPUT);
   pinMode(open,OUTPUT);
+  pinMode(grip,OUTPUT);
 
   pinMode(armdir,OUTPUT);
   pinMode(armpwm,OUTPUT);
@@ -425,15 +453,61 @@ void actuate(void *params) {
      analogWrite(rwpwm,urpwm*75/100);
      analogWrite(lwpwm,ulpwm);
 
-     if (circle)
-      digitalWrite(thro,HIGH);
-    else
-      digitalWrite(thro,LOW);
+     if (circle==1&&thro_toggle==0&&prev_thro == 0){
+      thro_toggle = 1;
+      prev_thro = 1;
+     }
+     else if(circle == 0)
+       prev_thro = 0;
+     
+    else if(circle==1&&thro_toggle==1 && prev_thro == 0){
+       thro_toggle = 0;
+       prev_thro = 1;
+       }
 
-    if (sqr)
-      digitalWrite(open,HIGH);
-    else
-      digitalWrite(open,LOW);
+
+    if(thro_toggle == 1)
+       digitalWrite(thro , HIGH);
+    else if (thro_toggle == 0)
+       digitalWrite(thro , LOW);   
+     
+       
+
+    if (sqr==1&&open_toggle==0&&prev_open == 0){
+      open_toggle = 1;
+      prev_open = 1;
+     }
+     else if(sqr == 0)
+       prev_open = 0;
+     
+    else if(sqr==1&&open_toggle==1 && prev_open == 0){
+       open_toggle = 0;
+       prev_open = 1;
+       }
+
+    if(open_toggle == 1)
+       digitalWrite(open , HIGH);
+    else if (open_toggle == 0)
+       digitalWrite(open , LOW);    
+
+    if (up==1&&grip_toggle==0&&prev_grip == 0){
+      grip_toggle = 1;
+      prev_grip = 1;
+     }
+     else if(up == 0)
+       prev_grip = 0;
+     
+    else if(up==1&&grip_toggle==1 && prev_grip == 0){
+       grip_toggle = 0;
+       prev_grip = 1;
+       }   
+
+
+    if(grip_toggle == 1)
+       digitalWrite(grip , HIGH);
+    else if (open_toggle == 0)
+       digitalWrite(grip , LOW);  
+      
 
     if (rotatearm == 1) {
       digitalWrite(armdir,LOW);
