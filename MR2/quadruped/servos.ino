@@ -6,9 +6,9 @@
  */
 
 const int servo_num = 8;
-const int servo_pins[servo_num] = {4,5, 2,3, 9,8, 6,7};
-const int servo_bias[servo_num] = {120,80, 80,115, 95,90, 85,100};
-const int servo_dir[servo_num] = {1,-1, -1,1, -1,1, 1,-1};
+const int servo_pins[servo_num] = {2,3, 4,5, 6,7, 8,9};
+const int servo_bias[servo_num] = {75,90, 120,85, 90,105, 85,115};
+const int servo_dir[servo_num] = {-1,-1, 1,1, 1,1, -1,-1};
 
 Servo servos[servo_num];
 

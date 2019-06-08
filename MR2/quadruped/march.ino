@@ -3,14 +3,14 @@ const int path_res = 40;
 const int path_res2 = path_res/2;
 const int path_res4 = path_res/4;
 
-const int path_delay = 2000/path_res;
+const int path_delay = 1500/path_res;
   
 float path_x[path_res];
 float path_y[path_res];
 
-const float raise_height = 1.5;
-const float lower_height = 1.5;
-const float step_radius = 3;
+const float raise_height = 8;
+const float lower_height = 0.5;
+const float step_radius = 5;
 int path_progress[4] = {0,0,0,0};
 
 float t1,t2;
@@ -79,12 +79,12 @@ void stop_march() {
 void calc_traj() {
 
   for(int t=0; t<path_res2; t+=1) {
-    path_x[t] = -step_radius*cos(-t*PI/(path_res2-1));
-    path_y[t] = raise_height*sin(-t*PI/(path_res2-1)) + lower_height;
+    path_x[t] = -step_radius*cos(t*PI/(path_res2-1));
+    path_y[t] = raise_height*sin(t*PI/(path_res2-1)) + lower_height;
   }
 
   for(int t=0; t<path_res2; t+=1) {
-    path_x[path_res2+t] = step_radius*cos(-t*PI/(path_res2-1));
-    path_y[path_res2+t] = lower_height-lower_height*sin(-t*PI/(path_res2-1));
+    path_x[path_res2+t] = step_radius*cos(t*PI/(path_res2-1));
+    path_y[path_res2+t] = lower_height-lower_height*sin(t*PI/(path_res2-1));
   }
 }
