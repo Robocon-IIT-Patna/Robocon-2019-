@@ -10,8 +10,11 @@ const float stand_diff = 1;
 const float stand_height = 40;
 const int leg_2_servo[4] = {0,2,4,6};
 
-const float x_bias[4] = {2,-1,3,2};
-const float y_bias[4] = {0.5,0,0.5,0};
+float x_bias[4] = {0,0,0,0};//{3,3,2,2};//{2,-1,3,2};
+float y_bias[4] = {0.5,0,0.5,0};
+
+float x_frac[4] = {1,1,1,1};
+float y_frac[4] = {1,1,1,1};
 
 void straight_pos() {
   float t1,t2;
@@ -32,8 +35,12 @@ void rest_pos() {
 }
 
 void ik(float x,float y,int lg,float *t1,float *t2) {
- 
+
   // coordinate transform
+
+  x = x_frac[lg]*x;
+  y = y_frac[lg]*y;
+  
   x = x+x_bias[lg];
   y = stand_height-y-l3[lg]-y_bias[lg];//-leg_bias[lg];
   
@@ -46,8 +53,8 @@ void ik(float x,float y,int lg,float *t1,float *t2) {
   //*t2 = 180-acos((l1*l1+l2*l2-x*x-y*y)/2/l1/l2)*180/PI;
 
   float t3,t4;
-
-  if (lg == 0 || lg == 1 || lg == 2 || lg == 3) {
+  
+  if (lg == 5 || lg == 6 || lg == 7 || lg == 8) {
     t3 = ((atan2(x,y)+acos((l1[lg]*l1[lg]+x*x+y*y-l2[lg]*l2[lg])/2/l1[lg]/sqrt(x*x+y*y))))*180/PI;
     t4 = 180-acos((l1[lg]*l1[lg]+l2[lg]*l2[lg]-x*x-y*y)/2/l1[lg]/l2[lg])*180/PI;
   } else {
@@ -55,9 +62,9 @@ void ik(float x,float y,int lg,float *t1,float *t2) {
     t4 = -180+acos((l1[lg]*l1[lg]+l2[lg]*l2[lg]-x*x-y*y)/2/l1[lg]/l2[lg])*180/PI;
   }
 
-  //if (lg == 2) {
-  //  Serial.println(String(x) + " " + String(y) + " " + String(t3) + " " + String(t4)); 
-  //}
+  if (lg == 2) {
+    Serial.println(String(x) + " " + String(y) + " " + String(t3) + " " + String(t4)); 
+  }
 
   if (!isnan(t3) && !isnan(t4)) {
     *t1 = t3;

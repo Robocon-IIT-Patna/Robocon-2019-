@@ -7,8 +7,8 @@
 
 const int servo_num = 8;
 const int servo_pins[servo_num] = {2,3, 4,5, 6,7, 8,9};
-const int servo_bias[servo_num] = {75,90, 120,85, 90,105, 85,115};
-const int servo_dir[servo_num] = {-1,-1, 1,1, 1,1, -1,-1};
+const int servo_bias[servo_num] = {82,165, 110,10, 87,40, 87,130};
+const int servo_dir[servo_num] = {-1,1, 1,-1, 1,-1, -1,1};
 
 Servo servos[servo_num];
 
@@ -28,7 +28,7 @@ void init_servos() {
   straight_pos();
   #endif
 
-  delay(3000);
+  //delay(3000);
 }
 
 void zero_pos() {
