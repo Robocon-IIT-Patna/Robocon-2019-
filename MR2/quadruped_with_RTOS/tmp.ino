@@ -1,3 +1,4 @@
+/*
 #define ADA_SERVOS 0
 #define WIRE_SERVOS 1
 #define ZERO_POS 1
@@ -50,7 +51,7 @@ void setup() {
   delay(10000);
   float t1,t2,t3,t4,t5,t6,t7,t8;
 
-  /*
+  
   ik(0,20,1,&t1,&t2);
   ik(-20,20,1,&t3,&t4);
   ik(-20,5,1,&t5,&t6);
@@ -109,9 +110,7 @@ void setup() {
       if (x_bias[1] < 0)
         x_bias[1] += 0.1;
     //}
-  }*/
-  
-
+  }
   
   zero_pos();
   delay(1500);
@@ -133,7 +132,7 @@ void setup() {
     move_leg(2,t5,t6);
     move_leg(3,t7,t8);
     delay(100);
-  }*/
+  }
 
   delay(1000);
   ik(10,20,2,&t1,&t2);
@@ -193,9 +192,4 @@ void setup() {
     march(true,true,true,true);
   }
   #endif
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  //march();
-}
+}*/
