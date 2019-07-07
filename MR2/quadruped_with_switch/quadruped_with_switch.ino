@@ -110,8 +110,8 @@ void sand_dune() {
 
   // lift and place 1st leg
   ik(0,20,1,&t1,&t2);
-  ik(-20,20,1,&t3,&t4);
-  ik(-20,5,1,&t5,&t6);
+  ik(-15,20,1,&t3,&t4);
+  ik(-15,5,1,&t5,&t6);
 
   move_leg(1,t1,t2); delay(500);
   move_leg(1,t3,t4); delay(500);
@@ -120,8 +120,8 @@ void sand_dune() {
 
   // lift and place 2nd leg
   ik(0,20,0,&t1,&t2);
-  ik(-20,20,0,&t3,&t4);
-  ik(-20,10,0,&t5,&t6);
+  ik(-15,20,0,&t3,&t4);
+  ik(-15,10,0,&t5,&t6);
   
   move_leg(0,t1,t2); delay(500);
   move_leg(0,t3,t4); delay(500);
@@ -141,19 +141,21 @@ void sand_dune() {
   // march over sand dune
 
   path_delay = 1500/path_res;
-  x_bias[0] = -20; y_bias[0] = 5; x_frac[0] = 1; y_frac[0] = 1;
-  x_bias[1] = -20; y_bias[1] = 5; x_frac[1] = 1; y_frac[1] = 1;
+  x_bias[0] = -15; y_bias[0] = 30; x_frac[0] = 1; y_frac[0] = 1;
+  x_bias[1] = -15; y_bias[1] = 30; x_frac[1] = 1; y_frac[1] = 1;
+  x_bias[2] = 5;
+  x_bias[3] = 5;
   
   start_march();
 
-  for(int w=0; w<8*40; w++) {
+  for(int w=0; w<12*40; w++) {
     march(true,true,true,true);
     
     if (x_bias[0] < 0)
-      x_bias[0] += 0.1;
+      x_bias[0] += 0.02;
     
     if (x_bias[1] < 0)
-      x_bias[1] += 0.1;
+      x_bias[1] += 0.02;
   }
   
   zero_pos();
@@ -161,10 +163,10 @@ void sand_dune() {
 
 
   // shift weight forward
-  move_leg(0,15,0);
-  move_leg(1,15,0);
-  move_leg(2,15,0);
-  move_leg(3,15,0);
+  move_leg(0,20,0);
+  move_leg(1,20,0);
+  move_leg(2,20,0);
+  move_leg(3,20,0);
 
   delay(1000);
 
@@ -210,11 +212,13 @@ void sand_dune() {
   
   start_march();
 
-  for(int w=0; w<8*40; w++) {
+  for(int w=0; w<4*40; w++) {
     march(true,true,true,true);
   }
 
   while(true) {
+    march(true,true,true,true);
+    
     if (y_bias[2] > 0)
       y_bias[2] -= 0.1;
 
@@ -341,11 +345,13 @@ void rope() {
   
   start_march();
 
-  for(int w=0; w<8*40; w++) {
+  for(int w=0; w<4*40; w++) {
     march(true,true,true,true);
   }
 
-  for(int w=0; w<8*40; w++) {
+  while(true) {
+    march(true,true,true,true);
+    
     if (y_bias[2] > 0)
       y_bias[2] -= 0.1;
 
@@ -360,7 +366,11 @@ void climb() {
   digitalWrite(ropeledpin,LOW);
   analogWrite(climbledpin,100);
   close_gripper();
-  up_gripper();
+  //up_gripper();
+
+  start_march();
+  while(true)
+    march(true,true,true,true);
 }
 
 void loop() {

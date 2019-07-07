@@ -5,18 +5,18 @@ const int trigPin = 22;
 const int echoPin = 23;
 
 const int gerege_thres = 50;
-const int wait_time_1 = 10000; //10s
-const int wait_time_2 = 5000; //5s
+const int wait_time_1 = 6000; //10s
+const int wait_time_2 = 3000; //5s
 
 Servo gripper_servo;
 const int gripper_servo_pin = 13;
 const int gripper_open_pos = 50;
-const int gripper_close_pos = 103;
+const int gripper_close_pos = 105;
 
 Servo tail_servo;
 const int tail_servo_pin = 12 ;
-const int tail_up_pos = 115;
-const int tail_down_pos = 125;
+const int tail_up_pos = 180;
+const int tail_down_pos = 180;
 
 void init_gripper() {
   // init ultrasonic sensor
@@ -26,13 +26,16 @@ void init_gripper() {
   //digitalWrite(ultra_power,HIGH);
 
   gripper_servo.attach(gripper_servo_pin); // init gripper
-  gripper_servo.write(gripper_open_pos); // open the gripper
-  tail_servo.attach(tail_servo_pin);
-  tail_servo.write(tail_up_pos);
+  gripper_servo.write(gripper_open_pos); // open the 9
+  //tail_servo.attach(tail_servo_pin);
+  //tail_servo.write(tail_up_pos);
+  //tail_servo.detach();
 }
 
 void get_gerege() {
   while(true) {
+    delay(2000);
+    
     // wait till gerege arrives
     if (measure_dist() <= gerege_thres) {
        break;
@@ -49,31 +52,31 @@ void get_gerege() {
   delay(wait_time_2);
 
   // if mr1 away, move on
-  if (measure_dist() >= gerege_thres) {
+  //if (measure_dist() >= gerege_thres) {
     int i;
     for(i=tail_up_pos; i!=tail_down_pos; ) {
-      tail_servo.write(i);
+      //tail_servo.write(i);
       if (i<tail_down_pos) i++;
       if (i>tail_down_pos) i--;
       delay(50);
     }
     return;
-  }
+  //}
 
   // get ready to receive gerege again
-  gripper_servo.write(gripper_open_pos);
+  //gripper_servo.write(gripper_open_pos);
 
-  get_gerege();
+  //get_gerege();
 }
 
 void close_gripper() {
   init_gripper();
   gripper_servo.write(gripper_close_pos);
-  tail_servo.write(tail_down_pos);
+  //tail_servo.write(tail_down_pos);
 }
 
 void up_gripper() {
-  tail_servo.write(60);
+  //tail_servo.write(60);
 }
 
 int measure_dist() {
